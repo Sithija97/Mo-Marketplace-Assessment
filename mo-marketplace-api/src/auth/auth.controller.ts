@@ -1,8 +1,17 @@
-import { Body, Controller, Post, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Req,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto/register.dto';
 import { LoginDto } from './dto/login.dto/login.dto';
 import type { Response } from 'express';
+import { JwtAuthGuard } from './guards/jwt-auth.guard/jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -27,5 +36,11 @@ export class AuthController {
     });
 
     return { accessToken };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('me')
+  getProfile(@Req() req) {
+    return req.user;
   }
 }
