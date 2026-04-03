@@ -1,3 +1,4 @@
+import { createHash, randomUUID } from 'crypto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import {
@@ -24,6 +25,10 @@ export class AuthService {
     private readonly config: ConfigService,
   ) {}
 
+  private hashToken(token: string): string {
+    return createHash('sha256').update(token).digest('hex');
+  }
+
   async register(dto: RegisterDto) {
     const email = dto.email.toLowerCase();
     const { password } = dto;
@@ -39,7 +44,7 @@ export class AuthService {
       password: hashedPassword,
     });
 
-    const { password: _pw, ...userWithoutPassword } = user;
+    const { password: _pw, refreshToken: _rt, ...userWithoutPassword } = user;
     return userWithoutPassword;
   }
 
@@ -71,12 +76,15 @@ export class AuthService {
       expiresIn: getAccessTokenExpiresIn(this.config),
     });
 
-    const refreshToken = this.jwtService.sign(payload, {
-      secret: getRefreshTokenSecret(this.config),
-      expiresIn: getRefreshTokenExpiresIn(this.config),
-    });
+    const refreshToken = this.jwtService.sign(
+      { ...payload, jti: randomUUID() },
+      {
+        secret: getRefreshTokenSecret(this.config),
+        expiresIn: getRefreshTokenExpiresIn(this.config),
+      },
+    );
 
-    const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
+    const hashedRefreshToken = this.hashToken(refreshToken);
 
     await this.usersService.updateRefreshToken(user.id, hashedRefreshToken);
 
@@ -108,8 +116,7 @@ export class AuthService {
         );
       }
 
-      // compare hashed token
-      const isMatch = await bcrypt.compare(refreshToken, user.refreshToken);
+      const isMatch = this.hashToken(refreshToken) === user.refreshToken;
 
       if (!isMatch) {
         throw new UnauthorizedException(
@@ -128,12 +135,15 @@ export class AuthService {
         expiresIn: getAccessTokenExpiresIn(this.config),
       });
 
-      const newRefreshToken = this.jwtService.sign(newPayload, {
-        secret: getRefreshTokenSecret(this.config),
-        expiresIn: getRefreshTokenExpiresIn(this.config),
-      });
+      const newRefreshToken = this.jwtService.sign(
+        { ...newPayload, jti: randomUUID() },
+        {
+          secret: getRefreshTokenSecret(this.config),
+          expiresIn: getRefreshTokenExpiresIn(this.config),
+        },
+      );
 
-      const hashedRefreshToken = await bcrypt.hash(newRefreshToken, 10);
+      const hashedRefreshToken = this.hashToken(newRefreshToken);
 
       await this.usersService.updateRefreshToken(user.id, hashedRefreshToken);
 

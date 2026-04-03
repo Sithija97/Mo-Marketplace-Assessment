@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
   Post,
   Req,
   Res,
@@ -64,6 +65,7 @@ export class AuthController {
     return this.authService.getProfile(req.user.id);
   }
 
+  @HttpCode(200)
   @Post('refresh')
   async refresh(
     @Req() req: Request,

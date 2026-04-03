@@ -44,12 +44,16 @@ export class UsersService {
         role: true,
         refreshToken: true,
       },
+      cache: false,
     });
   }
 
   async updateRefreshToken(userId: number, token: string | null) {
-    await this.userRepository.update(userId, {
+    const result = await this.userRepository.update(userId, {
       refreshToken: token,
     });
+    if (result.affected === 0) {
+      throw new Error(`Failed to update refresh token for user ${userId}`);
+    }
   }
 }
