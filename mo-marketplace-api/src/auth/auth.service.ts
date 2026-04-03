@@ -7,11 +7,14 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import type { StringValue } from 'ms';
 import { RegisterDto } from './dto/register.dto/register.dto';
 import { UsersService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto/login.dto';
-import { DEFAULT_REFRESH_EXPIRES_IN } from './auth.constants';
+import {
+  getAccessTokenExpiresIn,
+  getRefreshTokenExpiresIn,
+  getRefreshTokenSecret,
+} from './auth.constants';
 
 @Injectable()
 export class AuthService {
@@ -65,16 +68,12 @@ export class AuthService {
     };
 
     const accessToken = this.jwtService.sign(payload, {
-      expiresIn: (this.config.get<string>('JWT_EXPIRES_IN') ??
-        '5m') as StringValue,
+      expiresIn: getAccessTokenExpiresIn(this.config),
     });
 
     const refreshToken = this.jwtService.sign(payload, {
-      secret:
-        this.config.get<string>('JWT_REFRESH_SECRET') ??
-        this.config.getOrThrow<string>('JWT_SECRET'),
-      expiresIn: (this.config.get<string>('JWT_REFRESH_EXPIRES_IN') ??
-        DEFAULT_REFRESH_EXPIRES_IN) as StringValue,
+      secret: getRefreshTokenSecret(this.config),
+      expiresIn: getRefreshTokenExpiresIn(this.config),
     });
 
     const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
@@ -96,9 +95,7 @@ export class AuthService {
   async refreshTokens(refreshToken: string) {
     try {
       const payload = this.jwtService.verify<{ sub: number }>(refreshToken, {
-        secret:
-          this.config.get<string>('JWT_REFRESH_SECRET') ??
-          this.config.getOrThrow<string>('JWT_SECRET'),
+        secret: getRefreshTokenSecret(this.config),
       });
 
       const user = await this.usersService.findByIdWithRefreshToken(
@@ -128,16 +125,12 @@ export class AuthService {
       };
 
       const newAccessToken = this.jwtService.sign(newPayload, {
-        expiresIn: (this.config.get<string>('JWT_EXPIRES_IN') ??
-          '5m') as StringValue,
+        expiresIn: getAccessTokenExpiresIn(this.config),
       });
 
       const newRefreshToken = this.jwtService.sign(newPayload, {
-        secret:
-          this.config.get<string>('JWT_REFRESH_SECRET') ??
-          this.config.getOrThrow<string>('JWT_SECRET'),
-        expiresIn: (this.config.get<string>('JWT_REFRESH_EXPIRES_IN') ??
-          DEFAULT_REFRESH_EXPIRES_IN) as StringValue,
+        secret: getRefreshTokenSecret(this.config),
+        expiresIn: getRefreshTokenExpiresIn(this.config),
       });
 
       const hashedRefreshToken = await bcrypt.hash(newRefreshToken, 10);

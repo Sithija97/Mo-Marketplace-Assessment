@@ -5,8 +5,11 @@ import { UsersModule } from '../users/users.module';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import type { StringValue } from 'ms';
 import { JwtStrategy } from './strategies/jwt.strategy/jwt.strategy';
+import {
+  getAccessTokenExpiresIn,
+  getAccessTokenSecret,
+} from './auth.constants';
 
 @Module({
   imports: [
@@ -16,10 +19,9 @@ import { JwtStrategy } from './strategies/jwt.strategy/jwt.strategy';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
-        secret: config.getOrThrow<string>('JWT_SECRET'),
+        secret: getAccessTokenSecret(config),
         signOptions: {
-          expiresIn: (config.get<string>('JWT_EXPIRES_IN') ??
-            '15m') as StringValue,
+          expiresIn: getAccessTokenExpiresIn(config),
         },
       }),
     }),
