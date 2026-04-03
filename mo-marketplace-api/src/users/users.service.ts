@@ -19,7 +19,37 @@ export class UsersService {
     return this.userRepository.findOne({ where: { email } });
   }
 
+  async findByEmailWithPassword(email: string) {
+    return this.userRepository.findOne({
+      where: { email },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        password: true,
+      },
+    });
+  }
+
   async findById(id: number) {
     return this.userRepository.findOne({ where: { id } });
+  }
+
+  async findByIdWithRefreshToken(id: number) {
+    return this.userRepository.findOne({
+      where: { id },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        refreshToken: true,
+      },
+    });
+  }
+
+  async updateRefreshToken(userId: number, token: string | null) {
+    await this.userRepository.update(userId, {
+      refreshToken: token,
+    });
   }
 }

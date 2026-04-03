@@ -11,6 +11,7 @@ import type { StringValue } from 'ms';
 import { RegisterDto } from './dto/register.dto/register.dto';
 import { UsersService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto/login.dto';
+import { DEFAULT_REFRESH_EXPIRES_IN } from './auth.constants';
 
 @Injectable()
 export class AuthService {
@@ -43,7 +44,7 @@ export class AuthService {
     const email = dto.email.toLowerCase();
     const { password } = dto;
 
-    const user = await this.usersService.findByEmail(email);
+    const user = await this.usersService.findByEmailWithPassword(email);
 
     if (!user) {
       throw new UnauthorizedException(
@@ -65,13 +66,20 @@ export class AuthService {
 
     const accessToken = this.jwtService.sign(payload, {
       expiresIn: (this.config.get<string>('JWT_EXPIRES_IN') ??
-        '15m') as StringValue,
+        '5m') as StringValue,
     });
 
     const refreshToken = this.jwtService.sign(payload, {
+      secret:
+        this.config.get<string>('JWT_REFRESH_SECRET') ??
+        this.config.getOrThrow<string>('JWT_SECRET'),
       expiresIn: (this.config.get<string>('JWT_REFRESH_EXPIRES_IN') ??
-        '7d') as StringValue,
+        DEFAULT_REFRESH_EXPIRES_IN) as StringValue,
     });
+
+    const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
+
+    await this.usersService.updateRefreshToken(user.id, hashedRefreshToken);
 
     return { accessToken, refreshToken };
   }
@@ -81,7 +89,73 @@ export class AuthService {
     if (!user) {
       throw new NotFoundException('User account no longer exists');
     }
-    const { password: _pw, ...profile } = user;
+    const { password: _pw, refreshToken: _rt, ...profile } = user;
     return profile;
+  }
+
+  async refreshTokens(refreshToken: string) {
+    try {
+      const payload = this.jwtService.verify<{ sub: number }>(refreshToken, {
+        secret:
+          this.config.get<string>('JWT_REFRESH_SECRET') ??
+          this.config.getOrThrow<string>('JWT_SECRET'),
+      });
+
+      const user = await this.usersService.findByIdWithRefreshToken(
+        payload.sub,
+      );
+
+      if (!user || !user.refreshToken) {
+        throw new UnauthorizedException(
+          'Invalid refresh token - user not found',
+        );
+      }
+
+      // compare hashed token
+      const isMatch = await bcrypt.compare(refreshToken, user.refreshToken);
+
+      if (!isMatch) {
+        throw new UnauthorizedException(
+          'Invalid refresh token - token mismatch',
+        );
+      }
+
+      // rotation
+      const newPayload = {
+        sub: user.id,
+        email: user.email,
+        role: user.role,
+      };
+
+      const newAccessToken = this.jwtService.sign(newPayload, {
+        expiresIn: (this.config.get<string>('JWT_EXPIRES_IN') ??
+          '5m') as StringValue,
+      });
+
+      const newRefreshToken = this.jwtService.sign(newPayload, {
+        secret:
+          this.config.get<string>('JWT_REFRESH_SECRET') ??
+          this.config.getOrThrow<string>('JWT_SECRET'),
+        expiresIn: (this.config.get<string>('JWT_REFRESH_EXPIRES_IN') ??
+          DEFAULT_REFRESH_EXPIRES_IN) as StringValue,
+      });
+
+      const hashedRefreshToken = await bcrypt.hash(newRefreshToken, 10);
+
+      await this.usersService.updateRefreshToken(user.id, hashedRefreshToken);
+
+      return {
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken,
+      };
+    } catch (err) {
+      if (err instanceof UnauthorizedException) {
+        throw err;
+      }
+
+      throw new UnauthorizedException(
+        'Invalid refresh token - verification failed',
+      );
+    }
   }
 }
