@@ -28,8 +28,20 @@ api.interceptors.response.use(
   (res) => res,
   async (error) => {
     const originalRequest = error.config;
+    const requestUrl = originalRequest?.url ?? "";
+    const isAuthEndpoint =
+      typeof requestUrl === "string" &&
+      ["/auth/login", "/auth/register", "/auth/refresh", "/auth/logout"].some(
+        (endpoint) => requestUrl.includes(endpoint),
+      );
+    const hasToken = Boolean(useAuthStore.getState().accessToken);
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      !isAuthEndpoint &&
+      hasToken
+    ) {
       originalRequest._retry = true;
 
       if (isRefreshing) {
