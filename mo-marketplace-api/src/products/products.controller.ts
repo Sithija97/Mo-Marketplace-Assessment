@@ -19,6 +19,7 @@ import { RolesGuard } from 'src/auth/guards/roles.guard/roles.guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { UserRole } from 'src/common/enums';
 import { ListProductsQueryDto } from './dto/list-products-query.dto';
+import { QuickBuyDto } from './dto/quick-buy.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('products')
@@ -39,6 +40,11 @@ export class ProductsController {
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.service.findOneById(id);
+  }
+
+  @Post(':id/quick-buy')
+  quickBuy(@Param('id', ParseIntPipe) id: number, @Body() dto: QuickBuyDto) {
+    return this.service.quickBuy(id, dto);
   }
 
   @Roles(UserRole.ADMIN)
