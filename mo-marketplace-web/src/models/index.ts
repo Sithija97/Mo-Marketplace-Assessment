@@ -1,5 +1,2 @@
-export interface IUser {
-  id: number;
-  email: string;
-  role: string;
-}
+export * from "./user";
+export * from "./product";

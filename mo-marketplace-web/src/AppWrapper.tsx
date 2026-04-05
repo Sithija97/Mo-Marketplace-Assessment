@@ -22,7 +22,16 @@ export default function AppWrapper() {
       .finally(() => setLoading(false));
   }, [accessToken, logout, setUser]);
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-muted/20">
+        <div className="flex items-center gap-3 rounded-lg border bg-background px-4 py-3 shadow-sm">
+          <span className="size-4 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-foreground" />
+          <span className="text-sm text-muted-foreground">Loading...</span>
+        </div>
+      </div>
+    );
+  }
 
   return <App />;
 }
