@@ -58,6 +58,16 @@ export const createProduct = async (payload: ICreateProductPayload) => {
   return res.data;
 };
 
+export const createProductWithImage = async (payload: FormData) => {
+  const res = await api.post<IProduct>("/products/with-image", payload, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+
+  return res.data;
+};
+
 export const getProductById = async (id: number) => {
   const res = await api.get<IProduct>(`/products/${id}`);
   return res.data;
