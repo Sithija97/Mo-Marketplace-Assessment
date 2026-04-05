@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import ms from 'ms';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto/register.dto';
@@ -24,6 +25,7 @@ interface AuthenticatedRequest extends Request {
 }
 
 @Controller('auth')
+@ApiTags('Auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
@@ -43,11 +45,13 @@ export class AuthController {
   }
 
   @Post('register')
+  @ApiOperation({ summary: 'Register a new user' })
   register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
   }
 
   @Post('login')
+  @ApiOperation({ summary: 'Login and receive access token' })
   async login(
     @Body() dto: LoginDto,
     @Res({ passthrough: true }) res: Response,
@@ -61,12 +65,15 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
+  @ApiBearerAuth('bearer')
+  @ApiOperation({ summary: 'Get current authenticated user profile' })
   getProfile(@Req() req: AuthenticatedRequest) {
     return this.authService.getProfile(req.user.id);
   }
 
   @HttpCode(200)
   @Post('refresh')
+  @ApiOperation({ summary: 'Refresh access token using refresh cookie' })
   async refresh(
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
@@ -89,6 +96,8 @@ export class AuthController {
 
   @Post('logout')
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('bearer')
+  @ApiOperation({ summary: 'Logout current user and clear refresh token' })
   async logout(
     @Req() req: AuthenticatedRequest,
     @Res({ passthrough: true }) res: Response,
