@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { getProductById } from "@/api/products.api";
+import { getProductById, quickBuyProduct } from "@/api/products.api";
+import { getApiErrorMessage } from "@/lib/api-error";
+import { toast } from "sonner";
 import {
   Button,
   Card,
@@ -14,12 +16,14 @@ import type { IProduct, IVariant } from "@/models";
 export const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const QUICK_BUY_QUANTITY = 1;
 
   const [product, setProduct] = useState<IProduct | null>(null);
   const [selectedVariantId, setSelectedVariantId] = useState<number | null>(
     null,
   );
   const [isLoading, setIsLoading] = useState(true);
+  const [isBuying, setIsBuying] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const productId = Number(id);
@@ -58,6 +62,54 @@ export const ProductDetail = () => {
 
     return variants.find((variant) => variant.id === selectedVariantId) ?? null;
   }, [selectedVariantId, variants]);
+
+  const isOutOfStock = (selectedVariant?.stock ?? 0) <= 0;
+
+  const handleQuickBuy = async () => {
+    if (!selectedVariant || isOutOfStock || isBuying) {
+      return;
+    }
+
+    const selectedVariantSnapshot = selectedVariant;
+    const productName = product?.name ?? "Product";
+
+    setIsBuying(true);
+
+    try {
+      await toast.promise(
+        quickBuyProduct(productId, {
+          variantId: selectedVariantSnapshot.id,
+          quantity: QUICK_BUY_QUANTITY,
+        }).then((result) => {
+          setProduct((previous) => {
+            if (!previous?.variants) {
+              return previous;
+            }
+
+            return {
+              ...previous,
+              variants: previous.variants.map((variant) =>
+                variant.id === result.variantId
+                  ? { ...variant, stock: result.remainingStock }
+                  : variant,
+              ),
+            };
+          });
+
+          return result;
+        }),
+        {
+          loading: "Placing your order...",
+          success: (result) =>
+            `${productName}: ${selectedVariantSnapshot.color} / ${selectedVariantSnapshot.size} / ${selectedVariantSnapshot.material}. Remaining stock: ${result.remainingStock}`,
+          error: (error) =>
+            getApiErrorMessage(error, "Could not complete quick buy."),
+        },
+      );
+    } finally {
+      setIsBuying(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -155,6 +207,7 @@ export const ProductDetail = () => {
               ) : (
                 variants.map((variant) => {
                   const isSelected = selectedVariantId === variant.id;
+                  const isVariantOutOfStock = variant.stock <= 0;
 
                   return (
                     <Button
@@ -163,7 +216,14 @@ export const ProductDetail = () => {
                       className="h-auto justify-start px-3 py-2 text-left"
                       onClick={() => setSelectedVariantId(variant.id)}
                     >
-                      {variant.color} / {variant.size} / {variant.material}
+                      <span className="truncate">
+                        {variant.color} / {variant.size} / {variant.material}
+                      </span>
+                      <span className="ml-auto text-xs opacity-80">
+                        {isVariantOutOfStock
+                          ? "Out of stock"
+                          : `Stock: ${variant.stock}`}
+                      </span>
                     </Button>
                   );
                 })
@@ -181,32 +241,46 @@ export const ProductDetail = () => {
 
             <CardContent>
               {selectedVariant ? (
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div>
-                    <p className="text-muted-foreground">Color</p>
-                    <p className="font-medium capitalize">
-                      {selectedVariant.color}
-                    </p>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <p className="text-muted-foreground">Color</p>
+                      <p className="font-medium capitalize">
+                        {selectedVariant.color}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-muted-foreground">Size</p>
+                      <p className="font-medium uppercase">
+                        {selectedVariant.size}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-muted-foreground">Material</p>
+                      <p className="font-medium capitalize">
+                        {selectedVariant.material}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-muted-foreground">Stock</p>
+                      <p className="font-medium">{selectedVariant.stock}</p>
+                    </div>
                   </div>
 
-                  <div>
-                    <p className="text-muted-foreground">Size</p>
-                    <p className="font-medium uppercase">
-                      {selectedVariant.size}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-muted-foreground">Material</p>
-                    <p className="font-medium capitalize">
-                      {selectedVariant.material}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-muted-foreground">Stock</p>
-                    <p className="font-medium">{selectedVariant.stock}</p>
-                  </div>
+                  <Button
+                    className="w-full"
+                    disabled={isBuying || isOutOfStock}
+                    onClick={handleQuickBuy}
+                  >
+                    {isOutOfStock
+                      ? "Out of stock"
+                      : isBuying
+                        ? "Processing..."
+                        : "Buy now"}
+                  </Button>
                 </div>
               ) : (
                 <p className="text-muted-foreground text-sm">
