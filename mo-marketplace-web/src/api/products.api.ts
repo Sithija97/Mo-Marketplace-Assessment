@@ -6,6 +6,19 @@ import type {
 } from "@/models";
 import api from "./client";
 
+export interface IQuickBuyPayload {
+  variantId: number;
+  quantity: number;
+}
+
+export interface IQuickBuyResponse {
+  message: string;
+  productId: number;
+  variantId: number;
+  quantity: number;
+  remainingStock: number;
+}
+
 type QueryValue = string | number | boolean | undefined;
 
 function appendQueryParam(
@@ -47,6 +60,18 @@ export const createProduct = async (payload: ICreateProductPayload) => {
 
 export const getProductById = async (id: number) => {
   const res = await api.get<IProduct>(`/products/${id}`);
+  return res.data;
+};
+
+export const quickBuyProduct = async (
+  productId: number,
+  payload: IQuickBuyPayload,
+) => {
+  const res = await api.post<IQuickBuyResponse>(
+    `/products/${productId}/quick-buy`,
+    payload,
+  );
+
   return res.data;
 };
 
