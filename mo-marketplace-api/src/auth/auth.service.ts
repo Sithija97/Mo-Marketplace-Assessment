@@ -29,6 +29,15 @@ export class AuthService {
     return createHash('sha256').update(token).digest('hex');
   }
 
+  private stripSensitiveFields<
+    T extends { password?: string; refreshToken?: string | null },
+  >(user: T): Omit<T, 'password' | 'refreshToken'> {
+    const { password, refreshToken, ...safeUser } = user;
+    void password;
+    void refreshToken;
+    return safeUser;
+  }
+
   async register(dto: RegisterDto) {
     const email = dto.email.toLowerCase();
     const { password } = dto;
@@ -44,8 +53,7 @@ export class AuthService {
       password: hashedPassword,
     });
 
-    const { password: _pw, refreshToken: _rt, ...userWithoutPassword } = user;
-    return userWithoutPassword;
+    return this.stripSensitiveFields(user);
   }
 
   async login(dto: LoginDto) {
@@ -96,8 +104,7 @@ export class AuthService {
     if (!user) {
       throw new NotFoundException('User account no longer exists');
     }
-    const { password: _pw, refreshToken: _rt, ...profile } = user;
-    return profile;
+    return this.stripSensitiveFields(user);
   }
 
   async refreshTokens(refreshToken: string) {
