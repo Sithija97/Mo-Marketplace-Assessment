@@ -22,7 +22,7 @@ api.interceptors.request.use((config) => {
 
 // Handle refresh automatically
 let isRefreshing = false;
-let queue: any[] = [];
+let queue: Array<(token: string) => void> = [];
 
 api.interceptors.response.use(
   (res) => res,

@@ -8,7 +8,7 @@ export const Profile = () => {
 
   useEffect(() => {
     getMe().then((res) => setUser(res.data));
-  }, []);
+  }, [setUser]);
 
   return <div>{user?.email}</div>;
 };

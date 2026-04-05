@@ -44,6 +44,16 @@ $ npm run start:dev
 $ npm run start:prod
 ```
 
+## API documentation (Swagger)
+
+After starting the API, open Swagger UI at:
+
+```bash
+http://localhost:3000/api/docs
+```
+
+Use the `Authorize` button and provide a Bearer JWT token for protected endpoints.
+
 ## Run tests
 
 ```bash
