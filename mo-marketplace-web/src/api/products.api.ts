@@ -19,6 +19,18 @@ export interface IQuickBuyResponse {
   remainingStock: number;
 }
 
+export interface IUpdateProductPayload {
+  name?: string;
+  description?: string;
+  imageUrl?: string;
+  variants?: Array<{
+    color: string;
+    size: string;
+    material: string;
+    stock: number;
+  }>;
+}
+
 type QueryValue = string | number | boolean | undefined;
 
 function appendQueryParam(
@@ -82,5 +94,18 @@ export const quickBuyProduct = async (
     payload,
   );
 
+  return res.data;
+};
+
+export const updateProduct = async (
+  productId: number,
+  payload: IUpdateProductPayload,
+) => {
+  const res = await api.patch<IProduct>(`/products/${productId}`, payload);
+  return res.data;
+};
+
+export const deleteProduct = async (productId: number) => {
+  const res = await api.delete<{ message: string }>(`/products/${productId}`);
   return res.data;
 };

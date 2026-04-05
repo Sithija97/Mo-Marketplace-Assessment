@@ -84,8 +84,11 @@ export class ProductsController {
     return this.service.findOneById(id);
   }
 
+  @Roles(UserRole.USER)
   @Post(':id/quick-buy')
-  @ApiOperation({ summary: 'Quick buy a specific variant and reduce stock' })
+  @ApiOperation({
+    summary: 'Quick buy a specific variant and reduce stock (user only)',
+  })
   quickBuy(@Param('id', ParseIntPipe) id: number, @Body() dto: QuickBuyDto) {
     return this.service.quickBuy(id, dto);
   }
