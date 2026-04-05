@@ -12,6 +12,7 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { Variant } from '../variants/entities/variant.entity';
 import { CreateVariantDto } from './dto/create-variant.dto';
+import { ListProductsQueryDto } from './dto/list-products-query.dto';
 
 type DriverErrorWithCode = {
   code?: string;
@@ -77,13 +78,77 @@ export class ProductsService {
     }
   }
 
-  async findAll() {
-    return this.productRepo.find();
+  async findAll(query: ListProductsQueryDto) {
+    const {
+      page = 1,
+      limit = 20,
+      search,
+      color,
+      size,
+      material,
+      includeVariants = false,
+      sortBy = 'id',
+      sortOrder = 'DESC',
+    } = query;
+
+    const normalizedPage = Math.max(1, page);
+    const normalizedLimit = Math.min(100, Math.max(1, limit));
+
+    const qb = this.productRepo
+      .createQueryBuilder('product')
+      .distinct(true)
+      .skip((normalizedPage - 1) * normalizedLimit)
+      .take(normalizedLimit)
+      .orderBy(`product.${sortBy}`, sortOrder);
+
+    const shouldJoinVariants = includeVariants || Boolean(color || size || material);
+
+    if (shouldJoinVariants) {
+      qb.leftJoinAndSelect('product.variants', 'variant');
+    }
+
+    if (search) {
+      qb.andWhere(
+        '(LOWER(product.name) LIKE LOWER(:search) OR LOWER(product.description) LIKE LOWER(:search))',
+        { search: `%${search}%` },
+      );
+    }
+
+    if (color) {
+      qb.andWhere('variant.color = :color', { color });
+    }
+
+    if (size) {
+      qb.andWhere('variant.size = :size', { size });
+    }
+
+    if (material) {
+      qb.andWhere('variant.material = :material', { material });
+    }
+
+    const [data, total] = await qb.getManyAndCount();
+
+    const totalPages = Math.ceil(total / normalizedLimit);
+
+    return {
+      data,
+      meta: {
+        page: normalizedPage,
+        limit: normalizedLimit,
+        total,
+        totalPages,
+        hasNextPage: normalizedPage < totalPages,
+        hasPreviousPage: normalizedPage > 1,
+      },
+    };
   }
 
   async findOneById(id: number) {
     const product = await this.productRepo.findOne({
       where: { id },
+      relations: {
+        variants: true,
+      },
     });
 
     if (!product) {
@@ -101,6 +166,9 @@ export class ProductsService {
 
         const product = await productRepo.findOne({
           where: { id },
+          relations: {
+            variants: true,
+          },
         });
 
         if (!product) {

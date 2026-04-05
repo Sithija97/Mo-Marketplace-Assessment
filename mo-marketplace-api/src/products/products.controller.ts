@@ -8,6 +8,7 @@ import {
   Patch,
   Delete,
   ParseIntPipe,
+  Query,
 } from '@nestjs/common';
 
 import { ProductsService } from './products.service';
@@ -17,6 +18,7 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { RolesGuard } from 'src/auth/guards/roles.guard/roles.guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { UserRole } from 'src/common/enums';
+import { ListProductsQueryDto } from './dto/list-products-query.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('products')
@@ -30,8 +32,8 @@ export class ProductsController {
   }
 
   @Get()
-  findAll() {
-    return this.service.findAll();
+  findAll(@Query() query: ListProductsQueryDto) {
+    return this.service.findAll(query);
   }
 
   @Get(':id')

@@ -17,7 +17,6 @@ export class Product {
 
   @OneToMany(() => Variant, (variant) => variant.product, {
     cascade: true,
-    eager: true, // auto-load variants
     orphanedRowAction: 'delete',
   })
   variants!: Variant[];
