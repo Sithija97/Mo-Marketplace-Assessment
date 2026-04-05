@@ -1,6 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
-import { Login, ProductList, Register } from "./pages";
-import { PrivateRoute } from "./components";
+import { Login, ProductList, Profile, Register } from "./pages";
+import { PrivateRoute, ProtectedLayout } from "./components";
 
 const App = () => {
   return (
@@ -12,7 +12,10 @@ const App = () => {
 
         {/* Protected */}
         <Route element={<PrivateRoute />}>
-          <Route path="/products" element={<ProductList />} />
+          <Route element={<ProtectedLayout />}>
+            <Route path="/products" element={<ProductList />} />
+            <Route path="/profile" element={<Profile />} />
+          </Route>
 
           {/* <Route path="/profile" element={<Profile />} />
           <Route path="/products" element={<ProductList />} />

@@ -14,7 +14,7 @@ export const ProductList = () => {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center">
+    <div className="flex h-full flex-col items-center justify-center">
       <div>product list</div>
       <Button onClick={handleLogout}>Logout</Button>
     </div>

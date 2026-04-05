@@ -3,3 +3,6 @@ export * from "./ui/card";
 export * from "./ui/input";
 export * from "./ui/label";
 export * from "./private-route";
+export * from "./protected-layout";
+export * from "./protected-layout-header";
+export * from "./protected-layout-footer";
