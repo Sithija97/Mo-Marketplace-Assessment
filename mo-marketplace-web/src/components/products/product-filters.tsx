@@ -1,6 +1,14 @@
-import { Button, Card, CardContent, CardHeader, CardTitle, Input, Label } from "@/components";
-import type { ProductFilters, ProductSortOrder } from "@/lib/products";
-import type { ProductSortBy } from "@/models";
+import {
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Input,
+  Label,
+} from "@/components";
+import type { ProductFilters } from "@/lib/products";
+import type { ProductSortBy, ProductSortOrder } from "@/models";
 
 type ProductFiltersProps = {
   values: ProductFilters;
@@ -17,7 +25,10 @@ export function ProductFiltersPanel({
   onReset,
   isApplying,
 }: ProductFiltersProps) {
-  const update = <K extends keyof ProductFilters>(key: K, value: ProductFilters[K]) => {
+  const update = <K extends keyof ProductFilters>(
+    key: K,
+    value: ProductFilters[K],
+  ) => {
     onChange({ ...values, [key]: value });
   };
 
@@ -77,7 +88,9 @@ export function ProductFiltersPanel({
               id="sort-by"
               className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring/50 h-9 w-full rounded-md border px-3 text-sm shadow-xs outline-none focus-visible:ring-2"
               value={values.sortBy}
-              onChange={(event) => update("sortBy", event.target.value as ProductSortBy)}
+              onChange={(event) =>
+                update("sortBy", event.target.value as ProductSortBy)
+              }
             >
               <option value="id">Newest</option>
               <option value="name">Name</option>

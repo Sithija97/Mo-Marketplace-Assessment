@@ -179,11 +179,12 @@ export class ProductsService {
       .createQueryBuilder()
       .update(Variant)
       .set({
-        stock: () => `stock - ${quantity}`,
+        stock: () => 'stock - :quantity',
       })
       .where('id = :variantId', { variantId })
       .andWhere('productId = :productId', { productId })
       .andWhere('stock >= :quantity', { quantity })
+      .setParameters({ quantity })
       .execute();
 
     if (updateResult.affected && updateResult.affected > 0) {

@@ -326,15 +326,6 @@ export const CreateProduct = () => {
           </form>
         </CardContent>
       </Card>
-
-      {/* <Card>
-        <CardHeader>
-          <CardTitle>Create Products</CardTitle>
-          <CardDescription>
-            Testing utility page to seed products from your local dataset.
-          </CardDescription>
-        </CardHeader>
-      </Card> */}
     </div>
   );
 };
