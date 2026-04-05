@@ -27,7 +27,9 @@ async function bootstrap() {
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('MO Marketplace API')
-    .setDescription('API documentation for authentication, products, and quick-buy flows.')
+    .setDescription(
+      'API documentation for authentication, products, and quick-buy flows.',
+    )
     .setVersion('1.0')
     .addBearerAuth(
       {

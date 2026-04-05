@@ -15,7 +15,12 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiConsumes,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -44,7 +49,9 @@ export class ProductsController {
 
   @Roles(UserRole.ADMIN)
   @Post('with-image')
-  @ApiOperation({ summary: 'Create a new product with image upload (admin only)' })
+  @ApiOperation({
+    summary: 'Create a new product with image upload (admin only)',
+  })
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('image'))
   createWithImage(
@@ -64,7 +71,9 @@ export class ProductsController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'List products with optional filters and pagination' })
+  @ApiOperation({
+    summary: 'List products with optional filters and pagination',
+  })
   findAll(@Query() query: ListProductsQueryDto) {
     return this.service.findAll(query);
   }
