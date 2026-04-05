@@ -71,7 +71,10 @@ export class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const refreshToken = req.cookies?.refreshToken;
+    const refreshToken =
+      typeof req.cookies?.refreshToken === 'string'
+        ? req.cookies.refreshToken
+        : undefined;
 
     if (!refreshToken) {
       throw new UnauthorizedException('No refresh token provided');
