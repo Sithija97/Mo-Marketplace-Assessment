@@ -8,6 +8,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { getTypeOrmConfig } from './config/typeorm.config';
 import { ProductsModule } from './products/products.module';
 import { SeedModule } from './seed/seed.module';
+import { VariantsModule } from './variants/variants.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { SeedModule } from './seed/seed.module';
     UsersModule,
     ProductsModule,
     SeedModule,
+    VariantsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
