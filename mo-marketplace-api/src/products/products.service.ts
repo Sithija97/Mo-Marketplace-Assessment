@@ -14,6 +14,8 @@ import { Variant } from '../variants/entities/variant.entity';
 import { CreateVariantDto } from './dto/create-variant.dto';
 import { ListProductsQueryDto } from './dto/list-products-query.dto';
 import { QuickBuyDto } from './dto/quick-buy.dto';
+import { CloudinaryService } from './cloudinary.service';
+import type { ProductImageFile } from './cloudinary.service';
 
 type DriverErrorWithCode = {
   code?: string;
@@ -26,6 +28,7 @@ export class ProductsService {
     private productRepo: Repository<Product>,
     @InjectRepository(Variant)
     private variantRepo: Repository<Variant>,
+    private cloudinaryService: CloudinaryService,
   ) {}
 
   private generateKey(v: CreateVariantDto): string {
@@ -77,6 +80,15 @@ export class ProductsService {
     } catch (error) {
       this.mapDbError(error);
     }
+  }
+
+  async createWithImage(dto: CreateProductDto, file: ProductImageFile) {
+    const imageUrl = await this.cloudinaryService.uploadProductImage(file);
+
+    return this.create({
+      ...dto,
+      imageUrl,
+    });
   }
 
   async findAll(query: ListProductsQueryDto) {

@@ -2,13 +2,14 @@ import {
   IsString,
   ValidateNested,
   ArrayMinSize,
+  IsArray,
   IsOptional,
   IsUrl,
   IsNotEmpty,
   MinLength,
   MaxLength,
 } from 'class-validator';
-import { Transform, Type } from 'class-transformer';
+import { plainToInstance, Transform, Type } from 'class-transformer';
 import { CreateVariantDto } from './create-variant.dto';
 
 export class CreateProductDto {
@@ -30,6 +31,26 @@ export class CreateProductDto {
   @MaxLength(2000)
   description!: string;
 
+  @Transform(({ value }: { value: unknown }) => {
+    let parsedValue = value;
+
+    if (typeof value === 'string') {
+      try {
+        parsedValue = JSON.parse(value);
+      } catch {
+        return value;
+      }
+    }
+
+    if (!Array.isArray(parsedValue)) {
+      return parsedValue;
+    }
+
+    return parsedValue.map((variant) =>
+      plainToInstance(CreateVariantDto, variant),
+    );
+  })
+  @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateVariantDto)
   @ArrayMinSize(1)

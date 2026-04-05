@@ -9,7 +9,12 @@ import {
   Delete,
   ParseIntPipe,
   Query,
+  UploadedFile,
+  UseInterceptors,
+  ParseFilePipeBuilder,
+  HttpStatus,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -20,6 +25,7 @@ import { Roles } from 'src/auth/decorators/roles.decorator';
 import { UserRole } from 'src/common/enums';
 import { ListProductsQueryDto } from './dto/list-products-query.dto';
 import { QuickBuyDto } from './dto/quick-buy.dto';
+import type { ProductImageFile } from './cloudinary.service';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('products')
@@ -30,6 +36,25 @@ export class ProductsController {
   @Post()
   create(@Body() dto: CreateProductDto) {
     return this.service.create(dto);
+  }
+
+  @Roles(UserRole.ADMIN)
+  @Post('with-image')
+  @UseInterceptors(FileInterceptor('image'))
+  createWithImage(
+    @Body() dto: CreateProductDto,
+    @UploadedFile(
+      new ParseFilePipeBuilder()
+        .addMaxSizeValidator({ maxSize: 5 * 1024 * 1024 })
+        .addFileTypeValidator({ fileType: /^image\/(jpeg|jpg|png|webp)$/ })
+        .build({
+          fileIsRequired: true,
+          errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        }),
+    )
+    file: ProductImageFile,
+  ) {
+    return this.service.createWithImage(dto, file);
   }
 
   @Get()
