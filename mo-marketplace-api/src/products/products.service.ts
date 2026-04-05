@@ -13,6 +13,7 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { Variant } from '../variants/entities/variant.entity';
 import { CreateVariantDto } from './dto/create-variant.dto';
 import { ListProductsQueryDto } from './dto/list-products-query.dto';
+import { QuickBuyDto } from './dto/quick-buy.dto';
 
 type DriverErrorWithCode = {
   code?: string;
@@ -101,7 +102,8 @@ export class ProductsService {
       .take(normalizedLimit)
       .orderBy(`product.${sortBy}`, sortOrder);
 
-    const shouldJoinVariants = includeVariants || Boolean(color || size || material);
+    const shouldJoinVariants =
+      includeVariants || Boolean(color || size || material);
 
     if (shouldJoinVariants) {
       qb.leftJoinAndSelect('product.variants', 'variant');
@@ -156,6 +158,49 @@ export class ProductsService {
     }
 
     return product;
+  }
+
+  async quickBuy(productId: number, dto: QuickBuyDto) {
+    const { variantId, quantity } = dto;
+
+    const updateResult = await this.variantRepo
+      .createQueryBuilder()
+      .update(Variant)
+      .set({
+        stock: () => `stock - ${quantity}`,
+      })
+      .where('id = :variantId', { variantId })
+      .andWhere('productId = :productId', { productId })
+      .andWhere('stock >= :quantity', { quantity })
+      .execute();
+
+    if (updateResult.affected && updateResult.affected > 0) {
+      const updatedVariant = await this.variantRepo.findOne({
+        where: { id: variantId },
+      });
+
+      return {
+        message: 'Quick buy successful',
+        productId,
+        variantId,
+        quantity,
+        remainingStock: updatedVariant?.stock ?? 0,
+      };
+    }
+
+    const variant = await this.variantRepo
+      .createQueryBuilder('variant')
+      .where('variant.id = :variantId', { variantId })
+      .andWhere('variant.productId = :productId', { productId })
+      .getOne();
+
+    if (!variant) {
+      throw new NotFoundException(
+        `Variant ${variantId} not found for product ${productId}`,
+      );
+    }
+
+    throw new ConflictException('Insufficient stock for quick buy');
   }
 
   async update(id: number, dto: UpdateProductDto) {
