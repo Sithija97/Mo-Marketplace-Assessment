@@ -101,8 +101,12 @@ export const ProductDetail = () => {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{product.name}</h1>
-          <p className="text-muted-foreground text-sm">Product details and variant selection.</p>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            {product.name}
+          </h1>
+          <p className="text-muted-foreground text-sm">
+            Product details and variant selection.
+          </p>
         </div>
 
         <Button asChild variant="outline">
@@ -180,17 +184,23 @@ export const ProductDetail = () => {
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
                     <p className="text-muted-foreground">Color</p>
-                    <p className="font-medium capitalize">{selectedVariant.color}</p>
+                    <p className="font-medium capitalize">
+                      {selectedVariant.color}
+                    </p>
                   </div>
 
                   <div>
                     <p className="text-muted-foreground">Size</p>
-                    <p className="font-medium uppercase">{selectedVariant.size}</p>
+                    <p className="font-medium uppercase">
+                      {selectedVariant.size}
+                    </p>
                   </div>
 
                   <div>
                     <p className="text-muted-foreground">Material</p>
-                    <p className="font-medium capitalize">{selectedVariant.material}</p>
+                    <p className="font-medium capitalize">
+                      {selectedVariant.material}
+                    </p>
                   </div>
 
                   <div>
