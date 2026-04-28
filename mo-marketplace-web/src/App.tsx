@@ -27,11 +27,6 @@ const App = () => {
             </Route>
             <Route path="/profile" element={<Profile />} />
           </Route>
-
-          {/* <Route path="/profile" element={<Profile />} />
-          <Route path="/products" element={<ProductList />} />
-          <Route path="/products/:id" element={<ProductDetail />} />
-          <Route path="/create" element={<CreateProduct />} /> */}
         </Route>
 
         {/* Default redirect */}
