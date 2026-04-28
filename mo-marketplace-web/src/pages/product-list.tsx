@@ -10,6 +10,7 @@ import {
 } from "@/components";
 import {
   ProductFiltersPanel,
+  ProductFormDrawer,
   ProductGrid,
   ProductPagination,
 } from "@/components/products";
@@ -20,6 +21,9 @@ import {
   type ProductFilters,
 } from "@/lib/products";
 import type { IProduct, IProductListMeta } from "@/models";
+import { useAuthStore } from "@/store/auth.store";
+
+const ADMIN_ROLE = "admin";
 
 const emptyMeta: IProductListMeta = {
   page: 1,
@@ -39,6 +43,10 @@ export const ProductList = () => {
   const [meta, setMeta] = useState<IProductListMeta>(emptyMeta);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  const user = useAuthStore((s) => s.user);
+  const isAdmin = user?.role === ADMIN_ROLE;
 
   const isFiltering = useMemo(
     () => Boolean(query.search || query.color || query.size || query.material),
@@ -100,11 +108,17 @@ export const ProductList = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Products</h1>
-        <p className="text-muted-foreground text-sm">
-          Explore the marketplace catalog with search and variant filters.
-        </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Products</h1>
+          <p className="text-muted-foreground text-sm">
+            Explore the marketplace catalog with search and variant filters.
+          </p>
+        </div>
+
+        {isAdmin && (
+          <Button onClick={() => setIsDrawerOpen(true)}>Create product</Button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
@@ -183,6 +197,18 @@ export const ProductList = () => {
           </section>
         </div>
       </div>
+
+      {isAdmin && (
+        <ProductFormDrawer
+          mode="create"
+          open={isDrawerOpen}
+          onOpenChange={setIsDrawerOpen}
+          onCreated={() => {
+            setIsDrawerOpen(false);
+            fetchProducts();
+          }}
+        />
+      )}
     </div>
   );
 };

@@ -1,12 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
-import {
-  CreateProduct,
-  Login,
-  ProductDetail,
-  ProductList,
-  Profile,
-  Register,
-} from "./pages";
+import { Login, ProductDetail, ProductList, Profile, Register } from "./pages";
 import { AdminRoute, PrivateRoute, ProtectedLayout } from "./components";
 
 const App = () => {
@@ -23,7 +16,7 @@ const App = () => {
             <Route path="/products" element={<ProductList />} />
             <Route path="/products/:id" element={<ProductDetail />} />
             <Route element={<AdminRoute />}>
-              <Route path="/products/create" element={<CreateProduct />} />
+              {/* Create product is now handled by the drawer on /products */}
             </Route>
             <Route path="/profile" element={<Profile />} />
           </Route>

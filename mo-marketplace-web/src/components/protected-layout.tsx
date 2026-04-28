@@ -11,12 +11,7 @@ export function ProtectedLayout() {
   const clearAuth = useAuthStore((s) => s.logout);
   const navigate = useNavigate();
 
-  const navItems = [
-    { to: "/products", label: "Products" },
-    ...(user?.role === ADMIN_ROLE
-      ? [{ to: "/products/create", label: "Create" }]
-      : []),
-  ];
+  const navItems = [{ to: "/products", label: "Products" }];
 
   const handleLogout = async () => {
     try {
